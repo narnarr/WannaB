@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Getter;
 
-import static dev.nars.wannab.util.CustomResponseStatus.*;
+import static dev.nars.wannab.util.CustomResponseStatus.SUCCESS;
 
 @Getter
 @JsonPropertyOrder({"isSuccess", "code", "message", "result"})

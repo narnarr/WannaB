@@ -3,10 +3,8 @@ package dev.nars.wannab.user.dto;
 import dev.nars.wannab.check.Sex;
 import dev.nars.wannab.domain.User;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 

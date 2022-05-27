@@ -4,14 +4,17 @@ import dev.nars.wannab.check.Status;
 import dev.nars.wannab.domain.User;
 import dev.nars.wannab.user.dto.PatchUserReqDto;
 import dev.nars.wannab.util.CustomException;
-import static dev.nars.wannab.util.CustomResponseStatus.*;
-import static dev.nars.wannab.util.ValidationRegex.*;
-
 import dev.nars.wannab.util.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+
+import static dev.nars.wannab.util.CustomResponseStatus.*;
+import static dev.nars.wannab.util.ValidationRegex.isRegexEmail;
+import static dev.nars.wannab.util.ValidationRegex.isRegexPassword;
 
 @Service
 public class UserService {
@@ -37,12 +40,10 @@ public class UserService {
             throw new CustomException(INVALID_EMAIL);
         }
 
-        // 유효성 검사 - 이메일 중복 확인
-        Optional<User> u = userRepository.findByEmail(user.getEmail());
-        if(u.isPresent()) {
-            if(u.get().getStatusCk().equals("DELETED")) {
-                throw new CustomException(DELETED_EMAIL);
-           }
+        // 유효성 검사 - 이메일 중복 확인 + 탈퇴 여부 확인
+        Optional<User> findUser = userRepository.findByEmail(user.getEmail());
+        if(findUser.isPresent()) {
+            checkDeleted(findUser.get());
             throw new CustomException(EXISTING_EMAIL);
         }
 
@@ -63,24 +64,20 @@ public class UserService {
     /**
      * 로그인
      */
-    public String login(String email, String password) throws CustomException {
+    public Map<String, Object> login(String email, String password) throws CustomException {
         Optional<User> user = userRepository.findByEmail(email);
+        Map<String, Object> map = new HashMap<>();
 
-        // 가입한 적 없는 유저
-        if(!user.isPresent()) {
-            throw new CustomException(USER_NOT_FOUND);
-        }
-
+        checkExistence(user);
         User findUser = user.get();
-
-        // 탈퇴한 유저
-        if(findUser.getStatusCk().equals(Status.DELETED)) {
-            throw new CustomException(USER_NOT_FOUND);
-        }
+        checkDeleted(findUser);
 
         // 비밀번호 복호화
         if(passwordEncoder.matches(password, findUser.getPassword())) {
-            return jwtService.createJwt(findUser.getId());
+            String jwt = jwtService.createJwt(findUser.getId());
+            map.put("jwt", jwt);
+            map.put("user", findUser);
+            return map;
         } else {
             throw new CustomException(INCORRECT_PASSWORD);
         }
@@ -92,22 +89,21 @@ public class UserService {
     public User findOne(Long userId) throws CustomException {
         Optional<User> findUser = userRepository.findByUserId(userId);
 
-        // 잘못된 userId
-        if(!findUser.isPresent()) {
-            throw new CustomException(USER_NOT_FOUND);
-        }
+        checkExistence(findUser);
+        checkDeleted(findUser.get());
 
         return findUser.get();
     }
 
     public User updateInfo(Long userId, String oldPassword, User user) throws CustomException {
-        // 유저 확인
+        // 유저 권한 확인
         Long userIdByJwt = jwtService.getUserId();
         if(userId != userIdByJwt) {
             throw new CustomException(INVALID_USER_JWT);
         }
 
         User findUser = userRepository.findByUserId(userIdByJwt).get();
+        checkDeleted(findUser);
 
         // 기존 비밀번호 확인
         if(!passwordEncoder.matches(oldPassword, findUser.getPassword())) {
@@ -121,6 +117,22 @@ public class UserService {
         findUser.setPassword(encodePassword);
         findUser.setBirthday(user.getBirthday());
         findUser.setSex(user.getSex());
+
+        return userRepository.save(findUser);
+    }
+
+    /**
+     * 회원 탈퇴
+     */
+    public User deleteUser(Long userId) throws CustomException {
+        // jwt 확인
+        Long userIdByJwt = jwtService.getUserId();
+        if(userId != userIdByJwt) {
+            throw new CustomException(INVALID_USER_JWT);
+        }
+
+        User findUser = userRepository.findByUserId(userIdByJwt).get();
+        findUser.setStatusCk(Status.DELETED);
 
         return userRepository.save(findUser);
     }
@@ -141,4 +153,19 @@ public class UserService {
         userMapper.updateUserFromDto(dto, findUser);
         return userRepository.save(findUser);
     }
+
+    // 탈퇴한 유저
+    private void checkDeleted(User user) throws CustomException {
+        if(user.getStatusCk().equals(Status.DELETED)) {
+            throw new CustomException(USER_NOT_FOUND);
+        }
+    }
+
+    // 존재하지 않은 유저
+    public void checkExistence(Optional<User> user) throws CustomException {
+        if(!user.isPresent()) {
+            throw new CustomException(USER_NOT_FOUND);
+        }
+    }
+
 }

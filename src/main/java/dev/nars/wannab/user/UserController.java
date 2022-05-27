@@ -7,6 +7,8 @@ import dev.nars.wannab.util.CustomResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequestMapping("/user")
@@ -23,11 +25,11 @@ public class UserController {
      */
     @ResponseBody
     @PostMapping("")
-    public CustomResponse<PostUserResDto> create(@RequestBody PostUserReqDto postUserReqDto) {
+    public CustomResponse<Map<String, Object>> create(@RequestBody PostUserReqDto postUserReqDto) {
         try {
             User user = postUserReqDto.toEntity();
             userService.join(user);
-            return new CustomResponse<>(PostUserResDto.from(user));
+            return new CustomResponse<>(GetUserResDto.from(user));
         } catch (CustomException exception) {
             return new CustomResponse<>(exception.getResponseStatus());
         }
@@ -38,10 +40,11 @@ public class UserController {
      */
     @ResponseBody
     @PostMapping("/login")
-    public CustomResponse<PostLoginResDto> logIn(@RequestBody PostLoginReqDto postLoginReqDto) {
+    public CustomResponse<Map<String, Object>> logIn(@RequestBody PostLoginReqDto postLoginReqDto) {
         try {
-            String token = userService.login(postLoginReqDto.getEmail(),postLoginReqDto.getPassword());
-            return new CustomResponse<>(PostLoginResDto.from(token));
+            Map<String, Object> loginInfo = userService.login(postLoginReqDto.getEmail(),postLoginReqDto.getPassword());
+            User user = (User) loginInfo.get("user");
+            return new CustomResponse<>(GetUserResDto.jwtFrom(user, (String)loginInfo.get("jwt")));
         } catch (CustomException exception) {
             return new CustomResponse<>(exception.getResponseStatus());
         }
@@ -52,7 +55,7 @@ public class UserController {
      */
     @ResponseBody
     @GetMapping("/{userId}")
-    public CustomResponse<GetUserResDto> getUser(@PathVariable("userId") Long userId) {
+    public CustomResponse<Map<String, Object>> getUser(@PathVariable("userId") Long userId) {
         try {
             User user = userService.findOne(userId);
             return new CustomResponse<>(GetUserResDto.from(user));
@@ -65,10 +68,10 @@ public class UserController {
      * 회원정보 수정 API
      */
     @PatchMapping("/{userId}")
-    public CustomResponse<PatchUserResDto> updateInfo2(@PathVariable("userId") Long userId, @RequestBody PatchUserReqDto patchUserReqDto) {
+    public CustomResponse<Map<String, Object>> updateInfo2(@PathVariable("userId") Long userId, @RequestBody PatchUserReqDto patchUserReqDto) {
         try {
             User user = userService.updateInfo(userId, patchUserReqDto.getOldPassword(), patchUserReqDto.toEntity());
-            return new CustomResponse<>(PatchUserResDto.from(user));
+            return new CustomResponse<>(GetUserResDto.from(user));
         } catch (CustomException exception) {
             return new CustomResponse<>(exception.getResponseStatus());
         }
@@ -76,5 +79,25 @@ public class UserController {
 
     /**
      * 회원 탈퇴 API
+     */
+    @PatchMapping("/delete/{userId}")
+    public CustomResponse<DeleteUserResDto> deleteUser(@PathVariable("userId") Long userId) {
+        try {
+            User user = userService.deleteUser(userId);
+            return new CustomResponse<>(DeleteUserResDto.from(user));
+
+        } catch (CustomException exception) {
+            return new CustomResponse<>(exception.getResponseStatus());
+        }
+    }
+
+
+
+    /**
+     * 아이디 찾기
+     */
+
+    /**
+     * 비밀번호 찾기
      */
 }
