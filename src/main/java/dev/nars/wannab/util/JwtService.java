@@ -1,6 +1,6 @@
 package dev.nars.wannab.util;
 
-import dev.nars.wannab.util.secret.Secret;
+import dev.nars.wannab.util.key.Secret;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
