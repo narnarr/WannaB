@@ -15,7 +15,7 @@ public class Routine extends BaseEntity {
     @Column(name = "routine_id", nullable = false)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 

@@ -16,7 +16,7 @@ public class Course extends BaseEntity {
     @Column(name = "course_id", nullable = false)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "mentor_id", nullable = false)
     private Mentor mentor;
 
