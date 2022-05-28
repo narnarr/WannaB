@@ -34,7 +34,7 @@ public class UserService {
     /**
      * 회원가입
      */
-    public Long join(User user) throws CustomException {
+    public Long addUser(User user) throws CustomException {
         // 유효성 검사 - 이메일 형식 확인
         if(!isRegexEmail(user.getEmail())) {
             throw new CustomException(INVALID_EMAIL);
@@ -86,7 +86,7 @@ public class UserService {
     /**
      * 회원 조회
      */
-    public User findOne(Long userId) throws CustomException {
+    public User findUser(Long userId) throws CustomException {
         Optional<User> findUser = userRepository.findByUserId(userId);
 
         checkExistence(findUser);
@@ -95,7 +95,10 @@ public class UserService {
         return findUser.get();
     }
 
-    public User updateInfo(Long userId, String oldPassword, User user) throws CustomException {
+    /**
+     * 회원 정보 수정
+     */
+    public User modifyUser(Long userId, String oldPassword, User user) throws CustomException {
         // 유저 권한 확인
         Long userIdByJwt = jwtService.getUserId();
         if(userId != userIdByJwt) {
@@ -122,22 +125,6 @@ public class UserService {
     }
 
     /**
-     * 회원 탈퇴
-     */
-    public User deleteUser(Long userId) throws CustomException {
-        // jwt 확인
-        Long userIdByJwt = jwtService.getUserId();
-        if(userId != userIdByJwt) {
-            throw new CustomException(INVALID_USER_JWT);
-        }
-
-        User findUser = userRepository.findByUserId(userIdByJwt).get();
-        findUser.setStatusCk(Status.DELETED);
-
-        return userRepository.save(findUser);
-    }
-
-    /**
      * [Deprecated] 회원 정보 수정
      * 그저 Mapper를 이용해보고 싶어서 만들어 본 메소드. 비밀번호 암호화가 되지 않으니 사용하면 안된다.
      */
@@ -154,6 +141,22 @@ public class UserService {
         return userRepository.save(findUser);
     }
 
+    /**
+     * 회원 탈퇴
+     */
+    public User removeUser(Long userId) throws CustomException {
+        // jwt 확인
+        Long userIdByJwt = jwtService.getUserId();
+        if(userId != userIdByJwt) {
+            throw new CustomException(INVALID_USER_JWT);
+        }
+
+        User findUser = userRepository.findByUserId(userIdByJwt).get();
+        findUser.setStatusCk(Status.DELETED);
+
+        return userRepository.save(findUser);
+    }
+
     // 탈퇴한 유저
     private void checkDeleted(User user) throws CustomException {
         if(user.getStatusCk().equals(Status.DELETED)) {
@@ -161,7 +164,7 @@ public class UserService {
         }
     }
 
-    // 존재하지 않은 유저
+    // 존재하지 않는 유저
     public void checkExistence(Optional<User> user) throws CustomException {
         if(!user.isPresent()) {
             throw new CustomException(USER_NOT_FOUND);

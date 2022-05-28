@@ -25,10 +25,10 @@ public class UserController {
      */
     @ResponseBody
     @PostMapping("")
-    public CustomResponse<Map<String, Object>> create(@RequestBody PostUserReqDto postUserReqDto) {
+    public CustomResponse<Map<String, Object>> userAdd(@RequestBody PostUserReqDto postUserReqDto) {
         try {
             User user = postUserReqDto.toEntity();
-            userService.join(user);
+            userService.addUser(user);
             return new CustomResponse<>(GetUserResDto.from(user));
         } catch (CustomException exception) {
             return new CustomResponse<>(exception.getResponseStatus());
@@ -55,9 +55,9 @@ public class UserController {
      */
     @ResponseBody
     @GetMapping("/{userId}")
-    public CustomResponse<Map<String, Object>> getUser(@PathVariable("userId") Long userId) {
+    public CustomResponse<Map<String, Object>> userDetails(@PathVariable("userId") Long userId) {
         try {
-            User user = userService.findOne(userId);
+            User user = userService.findUser(userId);
             return new CustomResponse<>(GetUserResDto.from(user));
         } catch (CustomException exception) {
             return new CustomResponse<>(exception.getResponseStatus());
@@ -68,9 +68,9 @@ public class UserController {
      * 회원정보 수정 API
      */
     @PatchMapping("/{userId}")
-    public CustomResponse<Map<String, Object>> updateInfo2(@PathVariable("userId") Long userId, @RequestBody PatchUserReqDto patchUserReqDto) {
+    public CustomResponse<Map<String, Object>> userModify(@PathVariable("userId") Long userId, @RequestBody PatchUserReqDto patchUserReqDto) {
         try {
-            User user = userService.updateInfo(userId, patchUserReqDto.getOldPassword(), patchUserReqDto.toEntity());
+            User user = userService.modifyUser(userId, patchUserReqDto.getOldPassword(), patchUserReqDto.toEntity());
             return new CustomResponse<>(GetUserResDto.from(user));
         } catch (CustomException exception) {
             return new CustomResponse<>(exception.getResponseStatus());
@@ -81,9 +81,9 @@ public class UserController {
      * 회원 탈퇴 API
      */
     @PatchMapping("/delete/{userId}")
-    public CustomResponse<DeleteUserResDto> deleteUser(@PathVariable("userId") Long userId) {
+    public CustomResponse<DeleteUserResDto> userRemove(@PathVariable("userId") Long userId) {
         try {
-            User user = userService.deleteUser(userId);
+            User user = userService.removeUser(userId);
             return new CustomResponse<>(DeleteUserResDto.from(user));
 
         } catch (CustomException exception) {
