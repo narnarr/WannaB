@@ -1,5 +1,7 @@
 package dev.nars.wannab.domain;
 
+import dev.nars.wannab.domain.embed.BankAccount;
+import dev.nars.wannab.domain.embed.Contact;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,35 +18,23 @@ public class Mentor extends BaseEntity {
     private Long id;
 
     @Column(length = 20, nullable = false)
-    private String name;
-
-    @Column(length = 255, nullable = false)
-    private String email;
-
-    @Column(length = 20, nullable = false)
     private String nickname;
-
-    @Column(length = 20, nullable = false)
-    private String phoneNumber;
-
-    @Column(length = 20, nullable = false)
-    private String accountBank;
-
-    @Column(length = 20, nullable = false)
-    private String accountNumber;
 
     @Column(columnDefinition = "text", nullable = false)
     private String profileImg;
 
+    @Embedded
+    private Contact contact;
+
+    @Embedded
+    private BankAccount bankAccount;
+
     @Builder
-    public Mentor(Long id, String name, String email, String nickname, String phoneNumber, String accountBank, String accountNumber, String profileImg) {
+    public Mentor(Long id, String nickname, String profileImg, Contact contact, BankAccount bankAccount) {
         this.id = id;
-        this.name = name;
-        this.email = email;
         this.nickname = nickname;
-        this.phoneNumber = phoneNumber;
-        this.accountBank = accountBank;
-        this.accountNumber = accountNumber;
         this.profileImg = profileImg;
+        this.contact = contact;
+        this.bankAccount = bankAccount;
     }
 }
